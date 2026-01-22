@@ -1,0 +1,1732 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>Money OS</title>
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Money OS">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0b0b0c">
+
+  <style>
+    :root{
+      --bg:#0b0b0c;
+      --card:#14141b;
+      --stroke:#262633;
+      --text:#f2f2f2;
+      --muted:#b6b6c2;
+
+      --accent:#7c5cff;
+      --accent2:#2dd4bf;
+      --ok:#2dd4bf;
+      --warn:#fbbf24;
+      --bad:#fb7185;
+
+      --shadow: 0 12px 28px rgba(0,0,0,.38);
+      --radius:16px;
+      --navH: 78px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:
+        radial-gradient(900px 520px at 10% -10%, rgba(124,92,255,.24), transparent 62%),
+        radial-gradient(760px 420px at 92% 0%, rgba(45,212,191,.14), transparent 56%),
+        var(--bg);
+      color:var(--text);
+      font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial;
+    }
+
+    .app{ min-height:100vh; display:flex; flex-direction:column; }
+
+    header{
+      position:sticky; top:0; z-index:50;
+      background: linear-gradient(to bottom, rgba(11,11,12,.92), rgba(11,11,12,.65));
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(38,38,51,.6);
+      padding: calc(10px + env(safe-area-inset-top)) 16px 10px 16px;
+    }
+
+    .headWrap{
+      max-width:980px; margin:0 auto;
+      display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+    }
+
+    .brand{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+    h1{ margin:0; font-size:16px; letter-spacing:.2px; }
+    .sub{ color:var(--muted); font-size:12px; }
+
+    .pill{
+      display:inline-flex; align-items:center; gap:6px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight:900;
+      border:1px solid rgba(38,38,51,.9);
+      background: rgba(15,15,18,.9);
+      color: var(--muted);
+      white-space: nowrap;
+      max-width: 60vw;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .pill.ok{ color:#06251f; background: rgba(45,212,191,.95); border-color: rgba(45,212,191,.5); }
+    .pill.warn{ color:#2b1d00; background: rgba(251,191,36,.95); border-color: rgba(251,191,36,.5); }
+    .pill.bad{ color:#2b0b12; background: rgba(251,113,133,.95); border-color: rgba(251,113,133,.5); }
+
+    main{ flex:1; display:flex; justify-content:center; }
+    .wrap{
+      width:100%;
+      max-width:980px;
+      padding: 14px 16px calc(var(--navH) + env(safe-area-inset-bottom) + 14px);
+    }
+
+    .page{ display:none; }
+    .page.active{ display:block; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 12px;
+      align-items:start;
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(20,20,27,.92), rgba(16,16,23,.92));
+      border: 1px solid rgba(38,38,51,.9);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+    .card h2{
+      margin:0 0 10px;
+      font-size: 13px;
+      color: rgba(242,242,242,.9);
+      letter-spacing:.2px;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+
+    .muted{ color:var(--muted); font-size:12px; }
+    .big{ font-size:22px; font-weight:900; letter-spacing:.2px; }
+    .line{ height:1px; background: rgba(38,38,51,.8); margin:12px 0; }
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; }
+    .row > *{ flex:1; min-width: 140px; }
+
+    label{ display:block; margin-top:10px; margin-bottom:6px; font-size:12px; color: var(--muted); }
+
+    input, select, button, textarea{
+      width:100%;
+      border-radius: 14px;
+      border:1px solid rgba(38,38,51,.95);
+      background: rgba(15,15,18,.9);
+      color: var(--text);
+      padding: 11px 12px;
+      font-size: 14px;
+      outline: none;
+    }
+    textarea{ min-height: 70px; resize: vertical; }
+
+    input:focus, select:focus, textarea:focus{
+      border-color: rgba(124,92,255,.9);
+      box-shadow: 0 0 0 3px rgba(124,92,255,.18);
+    }
+
+    button{
+      cursor:pointer;
+      border:none;
+      font-weight:900;
+      background: linear-gradient(135deg, var(--accent), #4c35ff);
+      box-shadow: 0 10px 22px rgba(124,92,255,.18);
+    }
+    button.secondary{
+      background: rgba(42,42,55,.75);
+      border:1px solid rgba(70,70,90,.55);
+      box-shadow:none;
+    }
+    button.ghost{
+      background: transparent;
+      border:1px solid rgba(70,70,90,.55);
+      box-shadow:none;
+    }
+    button.danger{
+      background: linear-gradient(135deg, #fb7185, #ef4444);
+      box-shadow: 0 10px 22px rgba(239,68,68,.16);
+    }
+
+    .tiles{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .tile{
+      background: rgba(15,15,18,.75);
+      border: 1px solid rgba(38,38,51,.85);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .tile .k{ color: var(--muted); font-size:12px; }
+    .tile .v{ font-weight: 900; font-size: 16px; margin-top:4px; }
+    .tile .hint{ color: var(--muted); font-size: 11px; margin-top:6px; }
+
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .currency{ font-variant-numeric: tabular-nums; letter-spacing:.2px; }
+
+    /* Bottom Nav */
+    .nav{
+      position: fixed;
+      left:0; right:0; bottom:0;
+      padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(11,11,12,.88);
+      backdrop-filter: blur(14px);
+      border-top: 1px solid rgba(38,38,51,.75);
+      z-index: 60;
+    }
+    .nav .bar{
+      max-width:980px; margin:0 auto;
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+    .tab{
+      padding: 10px 8px;
+      border-radius: 14px;
+      background: rgba(15,15,18,.7);
+      border: 1px solid rgba(38,38,51,.8);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:4px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .tab.active{
+      color: var(--text);
+      border-color: rgba(124,92,255,.7);
+      background: radial-gradient(160px 60px at 50% 0%, rgba(124,92,255,.25), transparent 70%), rgba(15,15,18,.85);
+    }
+    .ico{ font-size:16px; line-height:16px; }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: calc(var(--navH) + env(safe-area-inset-bottom) + 10px);
+      transform: translateX(-50%);
+      background: rgba(17,17,22,.92);
+      border: 1px solid rgba(38,38,51,.9);
+      padding: 10px 12px;
+      border-radius: 999px;
+      color: var(--text);
+      font-size: 12px;
+      box-shadow: var(--shadow);
+      display:none;
+      z-index: 80;
+      max-width: 92vw;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .toast.show{ display:block; }
+
+    canvas{
+      width:100%;
+      height:220px;
+      background: rgba(15,15,18,.55);
+      border: 1px solid rgba(38,38,51,.75);
+      border-radius: 14px;
+    }
+
+    .list{
+      margin:0; padding:0; list-style:none;
+      display:flex; flex-direction:column; gap:8px;
+    }
+    .list li{
+      background: rgba(15,15,18,.60);
+      border: 1px solid rgba(38,38,51,.70);
+      border-radius: 14px;
+      padding: 10px 12px;
+      display:flex; justify-content:space-between; align-items:center;
+      gap:10px;
+    }
+    .tag{
+      font-size:12px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(70,70,90,.55);
+      background: rgba(15,15,18,.75);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .tag.paid{ border-color: rgba(45,212,191,.55); color: var(--accent2); }
+    .tag.due{ border-color: rgba(251,191,36,.55); color: var(--warn); }
+    .tag.late{ border-color: rgba(251,113,133,.55); color: var(--bad); }
+
+    details{ border:1px solid rgba(38,38,51,.7); border-radius:14px; padding:10px 12px; background: rgba(15,15,18,.55); }
+    details summary{ cursor:pointer; font-weight:900; color:rgba(242,242,242,.9); }
+    details .muted{ margin-top:8px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="headWrap">
+      <div class="brand">
+        <h1>Money OS</h1>
+        <div class="sub">Powerful • not cluttered • built for your system</div>
+      </div>
+      <div class="pill" id="miniStatus">Loading…</div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+
+      <!-- HOME -->
+      <section class="page active" id="page-home">
+        <div class="grid">
+          <div class="card">
+            <h2>Snapshot <span class="pill" id="statusPill">—</span></h2>
+            <div class="tiles">
+              <div class="tile"><div class="k">Allowance</div><div class="v" id="allowanceBig">$0.00</div><div class="hint">Spending ceiling.</div></div>
+              <div class="tile"><div class="k">Bills</div><div class="v" id="billsBig">$0.00</div><div class="hint">Keep above floor.</div></div>
+              <div class="tile"><div class="k">Buffer</div><div class="v" id="bufferBig">$0.00</div><div class="hint">Protection only.</div></div>
+              <div class="tile"><div class="k">Trips (total)</div><div class="v" id="tripsBig">$0.00</div><div class="hint">Experiences only.</div></div>
+            </div>
+
+            <div class="line"></div>
+            <div class="muted" id="nextAction">Next action: —</div>
+            <div class="muted small" id="homeNotes">—</div>
+
+            <div class="line"></div>
+            <div class="muted small"><b>Next 10 days payments:</b> <span id="next10Sum">$0.00</span></div>
+            <div class="muted small"><b>Bills after those payments:</b> <span id="billsAfter10">$0.00</span></div>
+
+            <div class="line"></div>
+            <button class="secondary" onclick="logSnapshot()">📸 Log Snapshot (Charts)</button>
+            <div class="muted small" style="margin-top:8px;">Log once per day or per paycheck for progress graphs.</div>
+          </div>
+
+          <div class="card">
+            <h2>Active Trip</h2>
+            <div class="muted small">One trip at a time to avoid clutter.</div>
+            <div class="line"></div>
+            <div class="row">
+              <div>
+                <label>Which trip?</label>
+                <select id="activeTrip" onchange="setActiveTrip(this.value)">
+                  <option value="feb">Feb</option>
+                  <option value="storm">Storm</option>
+                  <option value="hunt">Hunt</option>
+                </select>
+              </div>
+              <div>
+                <label>Trip fund balance</label>
+                <div class="pill" id="activeTripBal">$0.00</div>
+              </div>
+            </div>
+            <div class="line"></div>
+            <div class="muted" id="activeTripHint">—</div>
+            <div class="line"></div>
+            <button class="secondary" onclick="showPage('trips')">Manage Trips</button>
+          </div>
+
+          <div class="card">
+            <h2>Quick Add</h2>
+            <div class="muted">Digits like Truist. 1234 → $12.34</div>
+
+            <details style="margin-top:10px;">
+              <summary>Quick Add Money</summary>
+              <div class="row" style="margin-top:10px;">
+                <div>
+                  <label>Add to Bills</label>
+                  <input class="currency" id="addBills" inputmode="numeric" placeholder="$0.00">
+                  <button class="secondary" style="margin-top:10px;" onclick="quickAdd('bills')">Add</button>
+                </div>
+                <div>
+                  <label>Add to Buffer</label>
+                  <input class="currency" id="addBuffer" inputmode="numeric" placeholder="$0.00">
+                  <button class="secondary" style="margin-top:10px;" onclick="quickAdd('buffer')">Add</button>
+                </div>
+              </div>
+
+              <div class="row" style="margin-top:10px;">
+                <div>
+                  <label>Add to Allowance</label>
+                  <input class="currency" id="addAllow" inputmode="numeric" placeholder="$0.00">
+                  <button class="secondary" style="margin-top:10px;" onclick="quickAdd('allow')">Add</button>
+                </div>
+                <div>
+                  <label>Add to Active Trip</label>
+                  <input class="currency" id="addTrip" inputmode="numeric" placeholder="$0.00">
+                  <button class="secondary" style="margin-top:10px;" onclick="quickAdd('trip')">Add</button>
+                </div>
+              </div>
+              <div class="muted small" style="margin-top:8px;">Tip: If Bills is below floor, pause extras.</div>
+            </details>
+
+            <div class="line"></div>
+            <button onclick="runPaydayScript()">Run Payday Script</button>
+          </div>
+
+          <div class="card">
+            <h2>Upcoming Payments</h2>
+            <div class="muted small">Next 10 days. Tap to jump to Obligations.</div>
+            <div class="line"></div>
+            <div id="homeUpcoming" class="small muted">No obligations added yet.</div>
+            <div class="line"></div>
+            <button class="secondary" onclick="showPage('obligations')">View Obligations</button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ACTIONS -->
+      <section class="page" id="page-actions">
+        <div class="grid">
+          <div class="card">
+            <h2>Quick Actions</h2>
+            <div class="muted">Buttons + Truist amount entry.</div>
+            <div class="line"></div>
+            <div class="row">
+              <button onclick="actGotPaid()">💵 Got Paid</button>
+              <button class="secondary" onclick="actWindfall()">💰 Refund / Sale</button>
+            </div>
+            <div class="row" style="margin-top:10px;">
+              <button class="secondary" onclick="actMoveMoney()">🔁 Move Money</button>
+              <button class="danger" onclick="actResetAllowance()">🗓 Reset Allowance</button>
+            </div>
+            <div class="line"></div>
+            <div class="row">
+              <button class="secondary" onclick="actPayDebt()">🔥 Pay Debt (Target)</button>
+              <button class="secondary" onclick="actPayBill()">🧾 Pay Bill</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Safe to Spend?</h2>
+            <label>Amount</label>
+            <input class="currency" id="safeAmt" inputmode="numeric" placeholder="$0.00">
+            <label>Type</label>
+            <select id="safeType">
+              <option value="allowance">Allowance (normal)</option>
+              <option value="bills">Bills (essential only)</option>
+              <option value="trip">Active Trip</option>
+            </select>
+            <div class="line"></div>
+            <button class="secondary" onclick="checkSafe()">Check</button>
+            <div class="line"></div>
+            <div class="mono small" id="safeOut"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TRIPS -->
+      <section class="page" id="page-trips">
+        <div class="grid">
+          <div class="card">
+            <h2>Trip Presets</h2>
+            <div class="muted small">Each trip has its own target/date/bucket. Only one is “Active” at a time.</div>
+            <div class="line"></div>
+
+            <label>Active Trip</label>
+            <select id="activeTrip2" onchange="setActiveTrip(this.value)">
+              <option value="feb">Feb</option>
+              <option value="storm">Storm</option>
+              <option value="hunt">Hunt</option>
+            </select>
+
+            <div class="line"></div>
+
+            <details>
+              <summary>Feb Trip</summary>
+              <label>Date</label><input id="tripDate_feb" type="date">
+              <label>Target</label><input class="currency" id="tripTarget_feb" inputmode="numeric" placeholder="$0.00">
+              <label>Balance</label><input class="currency" id="tripBal_feb" inputmode="numeric" placeholder="$0.00">
+            </details>
+
+            <details style="margin-top:10px;">
+              <summary>Storm Chasing</summary>
+              <label>Date</label><input id="tripDate_storm" type="date">
+              <label>Target</label><input class="currency" id="tripTarget_storm" inputmode="numeric" placeholder="$0.00">
+              <label>Balance</label><input class="currency" id="tripBal_storm" inputmode="numeric" placeholder="$0.00">
+            </details>
+
+            <details style="margin-top:10px;">
+              <summary>Hunting Trip</summary>
+              <label>Date</label><input id="tripDate_hunt" type="date">
+              <label>Target</label><input class="currency" id="tripTarget_hunt" inputmode="numeric" placeholder="$0.00">
+              <label>Balance</label><input class="currency" id="tripBal_hunt" inputmode="numeric" placeholder="$0.00">
+            </details>
+
+            <div class="line"></div>
+            <button onclick="saveTrips()">Save Trips</button>
+          </div>
+
+          <div class="card">
+            <h2>Active Trip Plan</h2>
+            <div id="tripOut" class="small muted">Set trip date + target for the active trip.</div>
+            <div class="line"></div>
+            <div class="big" id="tripBig">$0.00</div>
+            <div class="muted">This is the active trip balance.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DEBT -->
+      <section class="page" id="page-debt">
+        <div class="grid">
+          <div class="card">
+            <h2>Debt Balances</h2>
+            <div class="muted small">All credit cards + installments. Used in charts.</div>
+
+            <label>Amex Gold</label><input class="currency" id="amexGold" inputmode="numeric" placeholder="$0.00">
+            <label>Amex Blue</label><input class="currency" id="amexBlue" inputmode="numeric" placeholder="$0.00">
+            <label>Apple Card</label><input class="currency" id="appleCard" inputmode="numeric" placeholder="$0.00">
+            <label>PayPal Credit Card</label><input class="currency" id="paypalCC" inputmode="numeric" placeholder="$0.00">
+            <label>Installments (Affirm/Pay-in-4/Apple installments)</label><input class="currency" id="installments" inputmode="numeric" placeholder="$0.00">
+
+            <div class="line"></div>
+            <button class="secondary" onclick="saveDebt()">Save Debt</button>
+          </div>
+
+          <div class="card">
+            <h2>Debt Kill Order</h2>
+            <div class="muted small">Powerful but simple: shows the next best target.</div>
+
+            <label>Mode</label>
+            <select id="killMode" onchange="renderKillOrder()">
+              <option value="interest_first">Interest-first (recommended)</option>
+              <option value="noise_first">Noise-first (installments)</option>
+            </select>
+
+            <label>Extra per paycheck</label>
+            <input class="currency" id="extraPerPaycheck" inputmode="numeric" placeholder="$0.00">
+
+            <div class="line"></div>
+            <div id="killOut" class="small muted">—</div>
+            <div class="line"></div>
+
+            <details>
+              <summary>Payoff Estimate (optional)</summary>
+              <label>APR to model (Amex)</label>
+              <input id="amexApr" inputmode="decimal" placeholder="28.49">
+              <label>Strategy</label>
+              <select id="debtStrategy">
+                <option value="highest_first">Highest APR first</option>
+                <option value="installments_first">Installments first</option>
+                <option value="split">Split 70/30</option>
+              </select>
+              <div class="line"></div>
+              <button class="secondary" onclick="calcDebtPlan()">Calculate</button>
+              <div class="line"></div>
+              <div id="debtOut" class="small muted">—</div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- OBLIGATIONS -->
+      <section class="page" id="page-obligations">
+        <div class="grid">
+          <div class="card">
+            <h2>Add Payment</h2>
+            <div class="muted small">One place to manage ALL payments. Add recurring so you don’t re-enter each month.</div>
+
+            <label>Description</label>
+            <input id="oblDesc" placeholder="Insurance, Affirm, PayPal, etc.">
+
+            <div class="row">
+              <div>
+                <label>Amount</label>
+                <input class="currency" id="oblAmt" inputmode="numeric" placeholder="$0.00">
+              </div>
+              <div>
+                <label>Start date</label>
+                <input id="oblDate" type="date">
+              </div>
+            </div>
+
+            <label>Recurring?</label>
+            <select id="oblFreq">
+              <option value="once">One-time</option>
+              <option value="weekly">Weekly</option>
+              <option value="biweekly">Biweekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+
+            <label>Pay from</label>
+            <select id="oblFrom">
+              <option value="bills">Bills</option>
+              <option value="allow">Allowance</option>
+              <option value="trip">Active Trip</option>
+              <option value="buffer">Buffer (only emergencies)</option>
+            </select>
+
+            <div class="line"></div>
+            <button class="secondary" onclick="addObligation()">Add</button>
+            <button class="ghost" style="margin-top:10px;" onclick="clearObligations()">Clear All</button>
+          </div>
+
+          <div class="card">
+            <h2>Upcoming</h2>
+            <div class="muted small">Shows occurrences. Tap to toggle Paid.</div>
+            <div class="line"></div>
+            <div id="oblList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ANALYSIS -->
+      <section class="page" id="page-analysis">
+        <div class="grid">
+          <div class="card">
+            <h2>Debt Breakdown</h2>
+            <canvas id="chartDebt"></canvas>
+            <div class="muted small" style="margin-top:8px;" id="debtLegend">—</div>
+          </div>
+
+          <div class="card">
+            <h2>Monthly Expenses (planned)</h2>
+            <canvas id="chartMonthly"></canvas>
+            <div class="muted small" style="margin-top:8px;" id="monthlyLegend">—</div>
+          </div>
+
+          <div class="card">
+            <h2>Progress (Debt over time)</h2>
+            <canvas id="chartProgress"></canvas>
+            <div class="muted small" style="margin-top:8px;">Log snapshots to build this chart.</div>
+          </div>
+
+          <div class="card">
+            <h2>Data</h2>
+            <button class="secondary" onclick="logSnapshot()">📸 Log Snapshot</button>
+            <button class="ghost" style="margin-top:10px;" onclick="clearSnapshots()">Clear Snapshots</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- WINS -->
+      <section class="page" id="page-wins">
+        <div class="grid">
+          <div class="card">
+            <h2>Impulse Wins</h2>
+            <label>What you didn’t buy</label>
+            <input id="winItem" placeholder="Amazon gadget, snacks, gear, etc.">
+            <label>Amount avoided</label>
+            <input class="currency" id="winAmt" inputmode="numeric" placeholder="$0.00">
+            <div class="line"></div>
+            <button class="secondary" onclick="logWin()">Log Win</button>
+            <div class="line"></div>
+            <div id="winsOut" class="small muted"></div>
+            <div class="line"></div>
+            <button class="ghost" onclick="clearWins()">Clear Wins</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="page" id="page-settings">
+        <div class="grid">
+          <div class="card">
+            <h2>Targets</h2>
+            <label>Weekly allowance</label><input class="currency" id="weekly" inputmode="numeric" placeholder="$0.00">
+            <label>Bills minimum (floor)</label><input class="currency" id="billsMin" inputmode="numeric" placeholder="$0.00">
+            <label>Bills ideal</label><input class="currency" id="billsIdeal" inputmode="numeric" placeholder="$0.00">
+            <label>Buffer target</label><input class="currency" id="bufferTarget" inputmode="numeric" placeholder="$0.00">
+            <label>Buffer floor</label><input class="currency" id="bufferFloor" inputmode="numeric" placeholder="$0.00">
+            <div class="line"></div>
+            <button onclick="saveSettings()">Save Settings</button>
+          </div>
+
+          <div class="card">
+            <h2>Balances</h2>
+            <div class="muted">Set these once, then use Actions buttons.</div>
+            <div class="line"></div>
+            <label>Bills</label><input class="currency" id="bills" inputmode="numeric" placeholder="$0.00">
+            <label>Allowance</label><input class="currency" id="allow" inputmode="numeric" placeholder="$0.00">
+            <label>Buffer</label><input class="currency" id="buffer" inputmode="numeric" placeholder="$0.00">
+            <div class="line"></div>
+            <button class="secondary" onclick="saveBalances()">Save Balances</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <nav class="nav">
+    <div class="bar">
+      <div class="tab active" data-to="home"><div class="ico">🏠</div>Home</div>
+      <div class="tab" data-to="actions"><div class="ico">⚡️</div>Actions</div>
+      <div class="tab" data-to="trips"><div class="ico">✈️</div>Trips</div>
+      <div class="tab" data-to="debt"><div class="ico">🔥</div>Debt</div>
+      <div class="tab" data-to="obligations"><div class="ico">📅</div>Pay</div>
+      <div class="tab" data-to="analysis"><div class="ico">📊</div>Charts</div>
+      <div class="tab" data-to="settings"><div class="ico">⚙️</div>Settings</div>
+    </div>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+  const LS = "money_os_v7";
+  const $ = (id)=>document.getElementById(id);
+
+  function toast(msg){
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"), 1400);
+  }
+
+  function load(){
+    const d = JSON.parse(localStorage.getItem(LS) || "{}");
+    return {
+      billsCents: d.billsCents ?? 0,
+      allowCents: d.allowCents ?? 0,
+      bufferCents: d.bufferCents ?? 0,
+
+      weeklyCents: d.weeklyCents ?? 10000,
+      billsMinCents: d.billsMinCents ?? 30000,
+      billsIdealCents: d.billsIdealCents ?? 100000,
+      bufferTargetCents: d.bufferTargetCents ?? 50000,
+      bufferFloorCents: d.bufferFloorCents ?? 30000,
+
+      // trips presets
+      activeTrip: d.activeTrip ?? "feb",
+      tripDate_feb: d.tripDate_feb ?? "",
+      tripTarget_feb: d.tripTarget_feb ?? 100000,
+      tripBal_feb: d.tripBal_feb ?? 0,
+
+      tripDate_storm: d.tripDate_storm ?? "",
+      tripTarget_storm: d.tripTarget_storm ?? 80000,
+      tripBal_storm: d.tripBal_storm ?? 0,
+
+      tripDate_hunt: d.tripDate_hunt ?? "",
+      tripTarget_hunt: d.tripTarget_hunt ?? 250000,
+      tripBal_hunt: d.tripBal_hunt ?? 0,
+
+      // debts
+      amexGoldCents: d.amexGoldCents ?? 0,
+      amexBlueCents: d.amexBlueCents ?? 0,
+      appleCardCents: d.appleCardCents ?? 0,
+      paypalCCCents: d.paypalCCCents ?? 0,
+      installmentsCents: d.installmentsCents ?? 0,
+
+      amexApr: d.amexApr ?? 28.49,
+      extraCents: d.extraCents ?? 0,
+      debtStrategy: d.debtStrategy ?? "highest_first",
+
+      // obligations w/ recurrence + paid map
+      obligations: d.obligations ?? [], // [{id, desc, cents, startDate, freq, from}]
+      paidOcc: d.paidOcc ?? {},         // key: `${id}|YYYY-MM-DD` -> true
+
+      wins: d.wins ?? [],
+      snapshots: d.snapshots ?? []
+    };
+  }
+
+  function save(patch){
+    const s = load();
+    localStorage.setItem(LS, JSON.stringify({...s, ...patch}));
+  }
+
+  function centsToMoney(c){ return (c/100).toFixed(2); }
+  function moneyStr(c){ return `$${centsToMoney(c)}`; }
+  function digitsToCents(digits){
+    const n = parseInt(digits || "0", 10);
+    return isNaN(n) ? 0 : n;
+  }
+
+  function attachCurrencyInput(el, initialCents=0){
+    el.dataset.cents = String(initialCents);
+    el.value = moneyStr(initialCents);
+
+    el.addEventListener("keydown", (e)=>{
+      const allowed = ["Backspace","Delete","ArrowLeft","ArrowRight","Tab"];
+      if(allowed.includes(e.key)) return;
+      if(e.key >= "0" && e.key <= "9"){
+        e.preventDefault();
+        const cur = el.dataset.cents || "0";
+        const next = (cur === "0") ? e.key : (cur + e.key);
+        el.dataset.cents = next;
+        el.value = moneyStr(digitsToCents(next));
+        return;
+      }
+      e.preventDefault();
+    });
+
+    el.addEventListener("paste", (e)=>{
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData("text") || "";
+      const digits = text.replace(/\D/g,"");
+      el.dataset.cents = digits || "0";
+      el.value = moneyStr(digitsToCents(el.dataset.cents));
+    });
+
+    el.addEventListener("keyup", (e)=>{
+      if(e.key === "Backspace" || e.key === "Delete"){
+        const cur = el.dataset.cents || "0";
+        const next = (cur.length <= 1) ? "0" : cur.slice(0, -1);
+        el.dataset.cents = next;
+        el.value = moneyStr(digitsToCents(next));
+      }
+    });
+  }
+
+  function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+
+  // Navigation
+  function showPage(key){
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    $("page-"+key).classList.add("active");
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    document.querySelectorAll(`.tab[data-to="${key}"]`).forEach(t=>t.classList.add("active"));
+
+    if(key==="analysis") renderCharts();
+    if(key==="obligations") renderObligations();
+    if(key==="wins") renderWins();
+    if(key==="debt") renderKillOrder();
+    if(key==="trips") renderTripsOut();
+  }
+  document.querySelectorAll(".tab").forEach(t=>{
+    t.addEventListener("click", ()=>showPage(t.dataset.to));
+  });
+
+  // Trips helpers
+  function tripKey(s){ return s.activeTrip; }
+  function getTripBal(s, key){
+    if(key==="feb") return s.tripBal_feb;
+    if(key==="storm") return s.tripBal_storm;
+    return s.tripBal_hunt;
+  }
+  function getTripTarget(s, key){
+    if(key==="feb") return s.tripTarget_feb;
+    if(key==="storm") return s.tripTarget_storm;
+    return s.tripTarget_hunt;
+  }
+  function getTripDate(s, key){
+    if(key==="feb") return s.tripDate_feb;
+    if(key==="storm") return s.tripDate_storm;
+    return s.tripDate_hunt;
+  }
+  function setTripBalPatch(key, cents){
+    if(key==="feb") return {tripBal_feb: cents};
+    if(key==="storm") return {tripBal_storm: cents};
+    return {tripBal_hunt: cents};
+  }
+
+  function setActiveTrip(key){
+    save({activeTrip:key});
+    $("activeTrip").value = key;
+    $("activeTrip2").value = key;
+    renderAll();
+    toast("Active trip set");
+  }
+
+  // ===== Recurring obligations =====
+  function addDays(date, n){
+    const d = new Date(date.getTime());
+    d.setDate(d.getDate()+n);
+    return d;
+  }
+  function addMonths(date, n){
+    const d = new Date(date.getTime());
+    d.setMonth(d.getMonth()+n);
+    return d;
+  }
+  function fmtDate(d){
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const da = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${da}`;
+  }
+
+  function occurrencesWithin(s, days){
+    const today = new Date(); today.setHours(0,0,0,0);
+    const end = addDays(today, days);
+
+    let occ = []; // {id, dateStr, cents, desc, from, paid}
+    for(const o of s.obligations){
+      const start = new Date(o.startDate+"T00:00:00");
+      if(isNaN(start)) continue;
+
+      // generate occurrences until end
+      let cur = start;
+
+      // fast-forward cur to >= today for recurring items
+      if(o.freq !== "once"){
+        while(cur < today){
+          if(o.freq==="weekly") cur = addDays(cur, 7);
+          else if(o.freq==="biweekly") cur = addDays(cur, 14);
+          else if(o.freq==="monthly") cur = addMonths(cur, 1);
+          else break;
+        }
+      }
+
+      if(o.freq==="once"){
+        if(cur >= today && cur <= end){
+          const ds = fmtDate(cur);
+          const paid = !!s.paidOcc[`${o.id}|${ds}`];
+          occ.push({id:o.id, dateStr:ds, cents:o.cents, desc:o.desc, from:o.from, paid});
+        }
+      } else {
+        while(cur <= end){
+          if(cur >= today){
+            const ds = fmtDate(cur);
+            const paid = !!s.paidOcc[`${o.id}|${ds}`];
+            occ.push({id:o.id, dateStr:ds, cents:o.cents, desc:o.desc, from:o.from, paid});
+          }
+          if(o.freq==="weekly") cur = addDays(cur, 7);
+          else if(o.freq==="biweekly") cur = addDays(cur, 14);
+          else if(o.freq==="monthly") cur = addMonths(cur, 1);
+          else break;
+        }
+      }
+    }
+
+    // sort by date
+    occ.sort((a,b)=>a.dateStr.localeCompare(b.dateStr));
+    return occ;
+  }
+
+  function sumUpcomingCents(days){
+    const s = load();
+    const occ = occurrencesWithin(s, days);
+    return occ.filter(x=>!x.paid).reduce((acc,x)=>acc+x.cents,0);
+  }
+
+  function getUpcomingList(days){
+    const s = load();
+    return occurrencesWithin(s, days);
+  }
+
+  function addObligation(){
+    const desc = $("oblDesc").value.trim();
+    const cents = digitsToCents($("oblAmt").dataset.cents || "0");
+    const date = $("oblDate").value;
+    const freq = $("oblFreq").value;
+    const from = $("oblFrom").value;
+
+    if(!desc || !date || cents<=0) return alert("Enter description, amount, and date.");
+
+    const s = load();
+    const obligations = s.obligations.slice();
+    const id = (crypto?.randomUUID?.() || String(Date.now()+Math.random()));
+    obligations.push({id, desc, cents, startDate: date, freq, from});
+    save({obligations});
+
+    $("oblDesc").value="";
+    $("oblAmt").dataset.cents="0"; $("oblAmt").value="$0.00";
+    $("oblDate").value="";
+    toast("Payment added");
+    renderAll();
+  }
+
+  function clearObligations(){
+    if(!confirm("Clear all obligations + paid history?")) return;
+    save({obligations:[], paidOcc:{}});
+    toast("Cleared");
+    renderAll();
+  }
+
+  function togglePaid(id, dateStr){
+    const s = load();
+    const key = `${id}|${dateStr}`;
+    const paidOcc = {...s.paidOcc};
+    paidOcc[key] = !paidOcc[key];
+    save({paidOcc});
+    renderObligations();
+    renderHome();
+  }
+
+  function renderObligations(){
+    const s = load();
+    const list = occurrencesWithin(s, 60); // show next 60 days
+    const el = $("oblList");
+
+    if(list.length===0){
+      el.innerHTML = "<div class='muted'>No payments added yet.</div>";
+      return;
+    }
+
+    const today = predominatelyToday();
+
+    let html = `<ul class="list">`;
+    for(const o of list){
+      const od = new Date(o.dateStr+"T00:00:00");
+      let cls="due";
+      if(o.paid) cls="paid";
+      else if(od < today) cls="late";
+
+      html += `
+        <li onclick="togglePaid('${o.id}','${o.dateStr}')">
+          <div>
+            <div><b>${o.dateStr}</b> • ${escapeHtml(o.desc)}</div>
+            <div class="muted small">${escapeHtml(o.from)} • ${moneyStr(o.cents)}</div>
+          </div>
+          <div class="tag ${cls}">${o.paid ? "PAID" : (od < today ? "LATE" : "DUE")}</div>
+        </li>
+      `;
+    }
+    html += `</ul>`;
+    el.innerHTML = html;
+  }
+
+  function predominatelyToday(){
+    const t = new Date();
+    t.setHours(0,0,0,0);
+    return t;
+  }
+
+  // ===== Debt / Kill Order =====
+  function totalDebt(s){
+    return s.amexGoldCents + s.amexBlueCents + s.appleCardCents + s.paypalCCCents + s.installmentsCents;
+  }
+
+  function renderKillOrder(){
+    const s = load();
+    const mode = $("killMode") ? $("killMode").value : "interest_first";
+    const extra = digitsToCents($("extraPerPaycheck").dataset.cents || "0");
+
+    // Determine target
+    let target = {name:"—", cents:0, why:"Enter balances to get a target."};
+
+    if(mode === "noise_first"){
+      if(s.installmentsCents > 0) target = {name:"Installments", cents:s.installmentsCents, why:"Removes random payment hits and mental load fastest."};
+      else if(s.amexGoldCents > 0) target = {name:"Amex Gold", cents:s.amexGoldCents, why:"Next loudest/most expensive debt."};
+      else if(s.amexBlueCents > 0) target = {name:"Amex Blue", cents:s.amexBlueCents, why:"Next."};
+      else if(s.appleCardCents > 0) target = {name:"Apple Card", cents:s.appleCardCents, why:"Next."};
+      else if(s.paypalCCCents > 0) target = {name:"PayPal Credit Card", cents:s.paypalCCCents, why:"Next."};
+      else target = {name:"Debt-free", cents:0, why:"No debts tracked."};
+    } else {
+      // interest-first (default)
+      if(s.amexGoldCents > 0) target = {name:"Amex Gold", cents:s.amexGoldCents, why:"Highest APR + largest impact on stress and interest."};
+      else if(s.amexBlueCents > 0) target = {name:"Amex Blue", cents:s.amexBlueCents, why:"Next highest APR/impact."};
+      else if(s.appleCardCents > 0) target = {name:"Apple Card", cents:s.appleCardCents, why:"APR + utilization impact."};
+      else if(s.paypalCCCents > 0) target = {name:"PayPal Credit Card", cents:s.paypalCCCents, why:"APR + fees risk."};
+      else if(s.installmentsCents > 0) target = {name:"Installments", cents:s.installmentsCents, why:"Clean up the remaining noise."};
+      else target = {name:"Debt-free", cents:0, why:"No debts tracked."};
+    }
+
+    const perMonth = extra * 2; // conservative
+    const estMonths = (target.cents > 0 && perMonth > 0) ? Math.ceil(target.cents / perMonth) : null;
+
+    const out = `
+      <div><b>Next target:</b> ${escapeHtml(target.name)} (${moneyStr(target.cents)})</div>
+      <div class="muted small" style="margin-top:6px;">Why: ${escapeHtml(target.why)}</div>
+      <div class="line"></div>
+      <div class="muted small">
+        Extra per paycheck: <b>${moneyStr(extra)}</b><br/>
+        Est. time to clear target (extra only): <b>${estMonths === null ? "—" : estMonths + " paychecks (~" + Math.ceil(estMonths/2) + " months)"}</b>
+      </div>
+    `;
+    $("killOut").innerHTML = out;
+  }
+
+  function saveDebt(){
+    save({
+      amexGoldCents: digitsToCents($("amexGold").dataset.cents || "0"),
+      amexBlueCents: digitsToCents($("amexBlue").dataset.cents || "0"),
+      appleCardCents: digitsToCents($("appleCard").dataset.cents || "0"),
+      paypalCCCents: digitsToCents($("paypalCC").dataset.cents || "0"),
+      installmentsCents: digitsToCents($("installments").dataset.cents || "0"),
+    });
+    toast("Debt saved");
+    renderAll();
+  }
+
+  function calcDebtPlan(){
+    const s = load();
+    const apr = parseFloat($("amexApr").value || s.amexApr || "0");
+    const extra = digitsToCents($("extraPerPaycheck").dataset.cents || "0");
+    const strat = $("debtStrategy").value;
+
+    save({ amexApr: apr, extraCents: extra, debtStrategy: strat });
+
+    const amexTotal = s.amexGoldCents + s.amexBlueCents;
+    const otherCards = s.appleCardCents + s.paypalCCCents;
+    const inst = s.installmentsCents;
+    const total = amexTotal + otherCards + inst;
+
+    if(extra<=0 || total<=0){
+      $("debtOut").textContent = "Enter debt balances + extra per paycheck.";
+      return;
+    }
+
+    const extraMonthly = extra*2;
+    let months = 0;
+    let amex = amexTotal, cards = otherCards, installments = inst;
+    const r = (apr/100)/12;
+
+    while((amex>1 || cards>1 || installments>1) && months<240){
+      months++;
+      if(amex>1 && r>0) amex = Math.round(amex*(1+r));
+
+      if(strat==="highest_first"){
+        let pay=extraMonthly;
+        if(amex>0){ const p=Math.min(pay,amex); amex-=p; pay-=p; }
+        if(pay>0 && cards>0){ const p=Math.min(pay,cards); cards-=p; pay-=p; }
+        if(pay>0 && installments>0){ const p=Math.min(pay,installments); installments-=p; pay-=p; }
+      } else if(strat==="installments_first"){
+        let pay=extraMonthly;
+        if(installments>0){ const p=Math.min(pay,installments); installments-=p; pay-=p; }
+        if(pay>0 && amex>0){ const p=Math.min(pay,amex); amex-=p; pay-=p; }
+        if(pay>0 && cards>0){ const p=Math.min(pay,cards); cards-=p; pay-=p; }
+      } else {
+        let payA=Math.round(extraMonthly*0.7);
+        let payI=extraMonthly-payA;
+        if(amex>0){ const p=Math.min(payA,amex); amex-=p; payA-=p; }
+        if(payA>0 && cards>0){ const p=Math.min(payA,cards); cards-=p; payA-=p; }
+        if(installments>0){ const p=Math.min(payI,installments); installments-=p; payI-=p; }
+      }
+    }
+
+    $("debtOut").innerHTML =
+      `Extra per paycheck: <b>${moneyStr(extra)}</b> (≈ ${moneyStr(extraMonthly)}/mo)<br>`+
+      `Strategy: <b>${escapeHtml(strat.replace("_"," "))}</b><br>`+
+      `<div class="line"></div>`+
+      `Estimated time (extra-only): <b>${months} months</b><br>`+
+      `<span class="muted">Minimum payments shorten this.</span>`;
+  }
+
+  // ===== Trips =====
+  function setActiveTripFromSelects(key){
+    $("activeTrip").value = key;
+    $("activeTrip2").value = key;
+  }
+
+  function setActiveTrip(key){
+    save({activeTrip:key});
+    setActiveTripFromSelects(key);
+    renderAll();
+  }
+
+  function activeTripBalance(s){
+    if(s.activeTrip==="feb") return s.tripBal_feb;
+    if(s.activeTrip==="storm") return s.tripBal_storm;
+    return s.tripBal_hunt;
+  }
+  function activeTripTarget(s){
+    if(s.activeTrip==="feb") return s.tripTarget_feb;
+    if(s.activeTrip==="storm") return s.tripTarget_storm;
+    return s.tripTarget_hunt;
+  }
+  function activeTripDate(s){
+    if(s.activeTrip==="feb") return s.tripDate_feb;
+    if(s.activeTrip==="storm") return s.tripDate_storm;
+    return s.tripDate_hunt;
+  }
+
+  function saveTrips(){
+    const patch = {
+      activeTrip: $("activeTrip2").value,
+      tripDate_feb: $("tripDate_feb").value,
+      tripDate_storm: $("tripDate_storm").value,
+      tripDate_hunt: $("tripDate_hunt").value,
+
+      tripTarget_feb: digitsToCents($("tripTarget_feb").dataset.cents || "0"),
+      tripTarget_storm: digitsToCents($("tripTarget_storm").dataset.cents || "0"),
+      tripTarget_hunt: digitsToCents($("tripTarget_hunt").dataset.cents || "0"),
+
+      tripBal_feb: digitsToCents($("tripBal_feb").dataset.cents || "0"),
+      tripBal_storm: digitsToCents($("tripBal_storm").dataset.cents || "0"),
+      tripBal_hunt: digitsToCents($("tripBal_hunt").dataset.cents || "0"),
+    };
+    save(patch);
+    setActiveTripFromSelects(patch.activeTrip);
+    toast("Trips saved");
+    renderAll();
+  }
+
+  function renderTripsOut(){
+    const s = load();
+    const bal = activeTripBalance(s);
+    const target = activeTripTarget(s);
+    const date = activeTripDate(s);
+
+    $("tripBig").textContent = moneyStr(bal);
+
+    if(!date || target<=0){
+      $("tripOut").textContent = "Set date + target for the active trip.";
+      $("activeTripBal").textContent = moneyStr(bal);
+      $("activeTripHint").textContent = "Set your trip date + target in Trips.";
+      return;
+    }
+
+    const now = new Date(); now.setHours(0,0,0,0);
+    const td = new Date(date+"T00:00:00");
+    const days = Math.max(0, Math.ceil((td-now)/(1000*60*60*24)));
+    const remaining = Math.max(0, target - bal);
+    const weeks = Math.max(1, Math.ceil(days/7));
+    const perWeek = Math.ceil(remaining / weeks);
+
+    $("tripOut").innerHTML =
+      `Active trip: <b>${escapeHtml(s.activeTrip.toUpperCase())}</b><br>`+
+      `Balance: <b>${moneyStr(bal)}</b> • Target: <b>${moneyStr(target)}</b><br>`+
+      `Remaining: <b>${moneyStr(remaining)}</b> • Days: <b>${days}</b><br>`+
+      `<div class="line"></div>`+
+      `Needed per week: <b>${moneyStr(perWeek)}</b>`;
+
+    $("activeTripBal").textContent = moneyStr(bal);
+    $("activeTripHint").textContent = remaining<=0 ? "Trip funded. Book confidently." : `Need about ${moneyStr(perWeek)} / week to hit target.`;
+  }
+
+  // ===== Home & totals =====
+  function totalTrips(s){
+    return s.tripBal_feb + s.tripBal_storm + s.tripBal_hunt;
+  }
+
+  function renderHome(){
+    const s = load();
+
+    $("allowanceBig").textContent = moneyStr(s.allowCents);
+    $("billsBig").textContent = moneyStr(s.billsCents);
+    $("bufferBig").textContent = moneyStr(s.bufferCents);
+    $("tripsBig").textContent = moneyStr(totalTrips(s));
+
+    // Status uses obligations
+    const due10 = sumUpcomingCents(10);
+    const billsAfter = s.billsCents - due10;
+
+    $("next10Sum").textContent = moneyStr(due10);
+    $("billsAfter10").textContent = moneyStr(billsAfter);
+
+    let pill="ok", label="Stable";
+    if(billsAfter < s.billsMinCents || s.bufferCents < s.bufferFloorCents){ pill="bad"; label="Tight"; }
+    else if(billsAfter < s.billsIdealCents || s.bufferCents < s.bufferTargetCents){ pill="warn"; label="Caution"; }
+
+    $("statusPill").className = `pill ${pill}`;
+    $("statusPill").textContent = label;
+    $("miniStatus").className = `pill ${pill}`;
+    $("miniStatus").textContent = `${label} • Bills ${moneyStr(s.billsCents)} • Buffer ${moneyStr(s.bufferCents)} • Due10 ${moneyStr(due10)}`;
+
+    // next best action
+    let next="", note="";
+    if(billsAfter < s.billsMinCents){
+      next="Cover upcoming payments (Bills below floor after obligations).";
+      note="Move money into Bills before anything else. This prevents late fees.";
+    } else if(s.bufferCents < s.bufferTargetCents){
+      next="Rebuild Buffer toward target.";
+      note="Buffer prevents reusing credit when timing gets weird.";
+    } else if(s.amexGoldCents > 0){
+      next="Attack Amex Gold first (interest-first).";
+      note="Highest APR. Even small extra payments matter.";
+    } else if(s.installmentsCents > 0){
+      next="Kill an installment plan (noise-first).";
+      note="Installments cause random hits; removing them calms cash flow.";
+    } else {
+      next="Maintain system. Keep it boring.";
+      note="Boring money = winning money.";
+    }
+    $("nextAction").textContent = `Next action: ${next}`;
+    $("homeNotes").textContent = note;
+
+    // Home upcoming list
+    const upcoming = getUpcomingList(10);
+    if(upcoming.length===0){
+      $("homeUpcoming").textContent = "No obligations added yet.";
+    } else {
+      const lines = upcoming.slice(0,4).map(o => `${o.dateStr} • ${o.desc} • ${moneyStr(o.cents)} • ${o.from}${o.paid ? " (PAID)" : ""}`);
+      $("homeUpcoming").innerHTML = lines.map(x=>`• ${escapeHtml(x)}`).join("<br/>") + (upcoming.length>4 ? "<br/><span class='muted'>…more in Pay</span>" : "");
+    }
+
+    renderTripsOut(); // updates active trip hint/bal
+  }
+
+  // ===== Quick Add =====
+  function quickAdd(which){
+    const s = load();
+    const map = { bills:"addBills", buffer:"addBuffer", allow:"addAllow", trip:"addTrip" };
+    const el = $(map[which]);
+    const cents = digitsToCents(el.dataset.cents || "0");
+    if(cents<=0) return toast("Enter an amount first.");
+
+    if(which==="bills") save({billsCents: s.billsCents + cents});
+    if(which==="buffer") save({bufferCents: s.bufferCents + cents});
+    if(which==="allow") save({allowCents: s.allowCents + cents});
+    if(which==="trip"){
+      const key = s.activeTrip;
+      if(key==="feb") save({tripBal_feb: s.tripBal_feb + cents});
+      else if(key==="storm") save({tripBal_storm: s.tripBal_storm + cents});
+      else save({tripBal_hunt: s.tripBal_hunt + cents});
+    }
+
+    el.dataset.cents="0"; el.value="$0.00";
+    toast(`Added ${moneyStr(cents)} to ${which}`);
+    renderAll();
+  }
+
+  // ===== Actions =====
+  function promptCents(label){
+    const raw = prompt(label + " (digits like Truist: 1234 = $12.34)");
+    if(raw===null) return null;
+    const cents = digitsToCents(raw.replace(/\D/g,""));
+    if(cents<=0){ alert("Enter a valid amount."); return null; }
+    return cents;
+  }
+
+  function actGotPaid(){
+    const cents = promptCents("Paycheck amount received");
+    if(cents===null) return;
+    const s = load();
+    save({billsCents: s.billsCents + cents});
+    toast("Paycheck added to Bills");
+    renderAll();
+  }
+
+  function actWindfall(){
+    const cents = promptCents("Refund / sale amount received");
+    if(cents===null) return;
+    const choice = prompt("Where should it go? 1=Debt (default) 2=Buffer 3=Active Trip 4=Bills");
+    const s = load();
+
+    if(choice==="2") save({bufferCents: s.bufferCents + cents});
+    else if(choice==="3"){
+      if(s.activeTrip==="feb") save({tripBal_feb: s.tripBal_feb + cents});
+      else if(s.activeTrip==="storm") save({tripBal_storm: s.tripBal_storm + cents});
+      else save({tripBal_hunt: s.tripBal_hunt + cents});
+    } else if(choice==="4") save({billsCents: s.billsCents + cents});
+    else {
+      // default: reduce Amex Gold
+      save({amexGoldCents: Math.max(0, s.amexGoldCents - cents)});
+    }
+
+    toast("Windfall logged");
+    renderAll();
+  }
+
+  function actMoveMoney(){
+    const cents = promptCents("How much are you moving");
+    if(cents===null) return;
+
+    const from = (prompt("Move FROM: bills / allow / buffer / trip")||"").trim().toLowerCase();
+    const to = (prompt("Move TO: bills / allow / buffer / trip")||"").trim().toLowerCase();
+
+    const s = load();
+
+    function getBucket(name){
+      if(name==="bills") return {key:"billsCents", val:s.billsCents};
+      if(name==="allow") return {key:"allowCents", val:s.allowCents};
+      if(name==="buffer") return {key:"bufferCents", val:s.bufferCents};
+      if(name==="trip"){
+        if(s.activeTrip==="feb") return {key:"tripBal_feb", val:s.tripBal_feb};
+        if(s.activeTrip==="storm") return {key:"tripBal_storm", val:s.tripBal_storm};
+        return {key:"tripBal_hunt", val:s.tripBal_hunt};
+      }
+      return null;
+    }
+
+    const f = getBucket(from), t = getBucket(to);
+    if(!f || !t || f.key===t.key) return alert("Invalid from/to.");
+    if(f.val < cents) return alert("Not enough in " + from);
+
+    const patch = {};
+    patch[f.key] = f.val - cents;
+    patch[t.key] = t.val + cents;
+    save(patch);
+
+    toast(`Moved ${moneyStr(cents)} ${from} → ${to}`);
+    renderAll();
+  }
+
+  function actResetAllowance(){
+    const s = load();
+    save({allowCents: s.weeklyCents});
+    toast("Allowance reset");
+    renderAll();
+  }
+
+  function actPayDebt(){
+    const cents = promptCents("Debt payment amount (defaults to top target)");
+    if(cents===null) return;
+    const s = load();
+    // Default target: Amex Gold, then Amex Blue, then Apple, then PayPal CC, then Installments
+    let patch = {};
+    if(s.amexGoldCents>0) patch.amexGoldCents = Math.max(0, s.amexGoldCents - cents);
+    else if(s.amexBlueCents>0) patch.amexBlueCents = Math.max(0, s.amexBlueCents - cents);
+    else if(s.appleCardCents>0) patch.appleCardCents = Math.max(0, s.appleCardCents - cents);
+    else if(s.paypalCCCents>0) patch.paypalCCCents = Math.max(0, s.paypalCCCents - cents);
+    else patch.installmentsCents = Math.max(0, s.installmentsCents - cents);
+    save(patch);
+    toast("Debt logged");
+    renderAll();
+  }
+
+  function actPayBill(){
+    const cents = promptCents("Bill paid amount (reduces Bills balance)");
+    if(cents===null) return;
+    const s = load();
+    save({billsCents: Math.max(0, s.billsCents - cents)});
+    toast("Bill logged");
+    renderAll();
+  }
+
+  // ===== Safe to Spend =====
+  function checkSafe(){
+    const s = load();
+    const amt = digitsToCents($("safeAmt").dataset.cents || "0");
+    const type = $("safeType").value;
+    if(amt<=0) return $("safeOut").textContent = "Enter an amount.";
+
+    const due10 = sumUpcomingCents(10);
+    let ok=true, notes=[];
+
+    if(type==="allowance"){
+      if(s.allowCents < amt){ ok=false; notes.push("Allowance insufficient."); }
+      if((s.billsCents - due10) < s.billsMinCents) notes.push("Bills after upcoming payments is below floor (heads-up).");
+    } else if(type==="bills"){
+      if((s.billsCents - due10 - amt) < s.billsMinCents){ ok=false; notes.push("Bills would drop below floor after upcoming payments."); }
+    } else {
+      // active trip
+      const bal = activeTripBalance(s);
+      if(bal < amt){ ok=false; notes.push("Active trip balance insufficient."); }
+    }
+
+    $("safeOut").textContent = (ok ? "✅ SAFE" : "❌ NOT SAFE") + (notes.length ? ("\n• "+notes.join("\n• ")) : "");
+  }
+
+  // ===== Wins =====
+  function logWin(){
+    const item = $("winItem").value.trim();
+    const cents = digitsToCents($("winAmt").dataset.cents || "0");
+    if(!item || cents<=0) return alert("Add item and amount.");
+    const s = load();
+    const wins = s.wins.slice();
+    wins.unshift({ item, cents, ts: Date.now() });
+    save({wins});
+    $("winItem").value="";
+    $("winAmt").dataset.cents="0"; $("winAmt").value="$0.00";
+    renderWins();
+    toast("Win logged");
+  }
+
+  function clearWins(){
+    if(!confirm("Clear wins?")) return;
+    save({wins: []});
+    renderWins();
+  }
+
+  function renderWins(){
+    const s = load();
+    const wins = s.wins || [];
+    if(!wins.length){ $("winsOut").textContent="No wins yet."; return; }
+
+    const now = Date.now();
+    const weekAgo = now - 7*24*3600*1000;
+    let week=0, total=0;
+    for(const w of wins){
+      total += w.cents;
+      if(w.ts >= weekAgo) week += w.cents;
+    }
+
+    let html = `<div class="big">${moneyStr(week)} <span class="muted">saved (7d)</span></div>`;
+    html += `<div class="muted">All-time: ${moneyStr(total)}</div>`;
+    html += `<ul>`;
+    for(const w of wins.slice(0,10)){
+      html += `<li><b>${moneyStr(w.cents)}</b> — ${escapeHtml(w.item)}</li>`;
+    }
+    html += `</ul>`;
+    $("winsOut").innerHTML = html;
+  }
+
+  // ===== Settings =====
+  function saveSettings(){
+    const weekly = digitsToCents($("weekly").dataset.cents || "0");
+    const billsMin = digitsToCents($("billsMin").dataset.cents || "0");
+    const billsIdeal = digitsToCents($("billsIdeal").dataset.cents || "0");
+    const bufTarget = digitsToCents($("bufferTarget").dataset.cents || "0");
+    const bufFloor = digitsToCents($("bufferFloor").dataset.cents || "0");
+
+    save({
+      weeklyCents: weekly,
+      billsMinCents: billsMin,
+      billsIdealCents: billsIdeal,
+      bufferTargetCents: bufTarget,
+      bufferFloorCents: bufFloor
+    });
+    toast("Settings saved");
+    renderAll();
+  }
+
+  function saveBalances(){
+    const bills = digitsToCents($("bills").dataset.cents || "0");
+    const allow = digitsToCents($("allow").dataset.cents || "0");
+    const buffer = digitsToCents($("buffer").dataset.cents || "0");
+
+    save({ billsCents: bills, allowCents: allow, bufferCents: buffer });
+    toast("Balances saved");
+    renderAll();
+  }
+
+  // ===== Charts =====
+  function drawDonut(canvas, parts){
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width = canvas.clientWidth * devicePixelRatio;
+    const h = canvas.height = canvas.clientHeight * devicePixelRatio;
+    ctx.clearRect(0,0,w,h);
+
+    const total = parts.reduce((a,p)=>a+p.value,0) || 1;
+    const cx=w/2, cy=h/2;
+    const r=Math.min(w,h)*0.35;
+    const thickness=r*0.45;
+
+    let start=-Math.PI/2;
+    for(const p of parts){
+      const frac=p.value/total;
+      const end=start+frac*2*Math.PI;
+      ctx.strokeStyle=p.color;
+      ctx.lineWidth=thickness;
+      ctx.lineCap="round";
+      ctx.beginPath();
+      ctx.arc(cx,cy,r,start,end);
+      ctx.stroke();
+      start=end;
+    }
+
+    ctx.fillStyle="rgba(242,242,242,.92)";
+    ctx.font=`${Math.round(18*devicePixelRatio)}px -apple-system, system-ui, Segoe UI, Roboto, Arial`;
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+    ctx.fillText("Debt", cx, cy - 10*devicePixelRatio);
+    ctx.fillStyle="rgba(182,182,194,.9)";
+    ctx.font=`${Math.round(14*devicePixelRatio)}px -apple-system, system-ui, Segoe UI, Roboto, Arial`;
+    ctx.fillText("Breakdown", cx, cy + 14*devicePixelRatio);
+  }
+
+  function drawBar(canvas, rows){
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width = canvas.clientWidth * devicePixelRatio;
+    const h = canvas.height = canvas.clientHeight * devicePixelRatio;
+    ctx.clearRect(0,0,w,h);
+
+    const max = Math.max(...rows.map(r=>r.value), 1);
+    const pad = 18*devicePixelRatio;
+    const barH = 18*devicePixelRatio;
+    const gap = 14*devicePixelRatio;
+
+    let y = pad;
+    ctx.font = `${Math.round(12*devicePixelRatio)}px -apple-system, system-ui, Segoe UI, Roboto, Arial`;
+    ctx.textBaseline = "middle";
+
+    for(const r of rows){
+      const bw = (w - pad*2) * (r.value / max);
+
+      ctx.fillStyle = "rgba(182,182,194,.9)";
+      ctx.textAlign = "left";
+      ctx.fillText(r.label, pad, y);
+
+      ctx.textAlign = "right";
+      ctx.fillText(`$${(r.value/100).toFixed(0)}`, w-pad, y);
+
+      y += 12*devicePixelRatio;
+      ctx.fillStyle = "rgba(38,38,51,.65)";
+      ctx.fillRect(pad, y, w-pad*2, barH);
+      ctx.fillStyle = r.color;
+      ctx.fillRect(pad, y, bw, barH);
+
+      y += barH + gap;
+      if(y > h - pad) break;
+    }
+  }
+
+  function drawLine(canvas, points){
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width = canvas.clientWidth * devicePixelRatio;
+    const h = canvas.height = canvas.clientHeight * devicePixelRatio;
+    ctx.clearRect(0,0,w,h);
+
+    if(points.length < 2){
+      ctx.fillStyle = "rgba(182,182,194,.9)";
+      ctx.font = `${Math.round(14*devicePixelRatio)}px -apple-system, system-ui, Segoe UI, Roboto, Arial`;
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      ctx.fillText("Log 2+ snapshots to see progress", w/2, h/2);
+      return;
+    }
+
+    const pad = 18*devicePixelRatio;
+    const xs = points.map(p=>p.x);
+    const ys = points.map(p=>p.y);
+    const xmin=Math.min(...xs), xmax=Math.max(...xs);
+    const ymin=Math.min(...ys), ymax=Math.max(...ys);
+    const yr=Math.max(1, ymax-ymin);
+
+    function px(x){ return pad + (w - pad*2) * ((x - xmin)/(xmax - xmin)); }
+    function py(y){ return (h - pad) - (h - pad*2) * ((y - ymin)/yr); }
+
+    ctx.strokeStyle="rgba(124,92,255,.95)";
+    ctx.lineWidth=3*devicePixelRatio;
+    ctx.lineJoin="round"; ctx.lineCap="round";
+    ctx.beginPath();
+    ctx.moveTo(px(points[0].x), py(points[0].y));
+    for(const p of points.slice(1)) ctx.lineTo(px(p.x), py(p.y));
+    ctx.stroke();
+
+    const last = points[points.length-1];
+    ctx.fillStyle="rgba(45,212,191,.95)";
+    ctx.beginPath();
+    ctx.arc(px(last.x), py(last.y), 4*devicePixelRatio, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle="rgba(182,182,194,.9)";
+    ctx.font = `${Math.round(12*devicePixelRatio)}px -apple-system, system-ui, Segoe UI, Roboto, Arial`;
+    ctx.textAlign="left";
+    ctx.fillText(`Debt: $${(last.y/100).toFixed(0)}`, pad, pad);
+  }
+
+  function renderCharts(){
+    const s = load();
+    const parts = [
+      {label:"Amex Gold", value:s.amexGoldCents, color:"rgba(124,92,255,.95)"},
+      {label:"Amex Blue", value:s.amexBlueCents, color:"rgba(45,212,191,.95)"},
+      {label:"Apple Card", value:s.appleCardCents, color:"rgba(251,191,36,.95)"},
+      {label:"PayPal CC", value:s.paypalCCCents, color:"rgba(251,113,133,.95)"},
+      {label:"Installments", value:s.installmentsCents, color:"rgba(148,163,184,.95)"}
+    ];
+    drawDonut($("chartDebt"), parts);
+    $("debtLegend").innerHTML = parts.map(p=>`• ${p.label}: <b>${moneyStr(p.value)}</b>`).join("<br/>");
+
+    const fixedRows = [
+      {label:"Truck", value:70000, color:"rgba(124,92,255,.85)"},
+      {label:"Insurance", value:21300, color:"rgba(45,212,191,.85)"},
+      {label:"Phone", value:15000, color:"rgba(251,191,36,.85)"},
+      {label:"Dog", value:10000, color:"rgba(148,163,184,.85)"},
+      {label:"Upcoming (30d)", value: sumUpcomingCents(30), color:"rgba(251,113,133,.85)"},
+    ];
+    drawBar($("chartMonthly"), fixedRows);
+    $("monthlyLegend").innerHTML = fixedRows.map(r=>`• ${r.label}: <b>${moneyStr(r.value)}</b>`).join("<br/>");
+
+    const pts = (s.snapshots || []).map(x=>({x:x.ts, y:x.debt}));
+    drawLine($("chartProgress"), pts);
+  }
+
+  // ===== Snapshots =====
+  function logSnapshot(){
+    const s = load();
+    const snapshots = s.snapshots.slice();
+    snapshots.push({
+      ts: Date.now(),
+      debt: totalDebt(s),
+      bills: s.billsCents,
+      buffer: s.bufferCents,
+      trips: totalTrips(s)
+    });
+    save({snapshots});
+    toast("Snapshot logged");
+    renderCharts();
+  }
+
+  function clearSnapshots(){
+    if(!confirm("Clear snapshot history?")) return;
+    save({snapshots: []});
+    toast("Snapshots cleared");
+    renderCharts();
+  }
+
+  // ===== Bind inputs once =====
+  function bindCurrencyOnce(id, cents){
+    const el = $(id);
+    if(!el) return;
+    if(el.dataset.bound==="1") return;
+    el.dataset.bound="1";
+    attachCurrencyInput(el, cents);
+  }
+
+  function bindAll(){
+    const s = load();
+
+    // Home quick add
+    bindCurrencyOnce("addBills", 0);
+    bindCurrencyOnce("addBuffer", 0);
+    bindCurrencyOnce("addAllow", 0);
+    bindCurrencyOnce("addTrip", 0);
+
+    // Safe
+    bindCurrencyOnce("safeAmt", 0);
+
+    // Wins
+    bindCurrencyOnce("winAmt", 0);
+
+    // Obligations
+    bindCurrencyOnce("oblAmt", 0);
+
+    // Settings targets & balances
+    bindCurrencyOnce("weekly", s.weeklyCents);
+    bindCurrencyOnce("billsMin", s.billsMinCents);
+    bindCurrencyOnce("billsIdeal", s.billsIdealCents);
+    bindCurrencyOnce("bufferTarget", s.bufferTargetCents);
+    bindCurrencyOnce("bufferFloor", s.bufferFloorCents);
+
+    bindCurrencyOnce("bills", s.billsCents);
+    bindCurrencyOnce("allow", s.allowCents);
+    bindCurrencyOnce("buffer", s.bufferCents);
+
+    // Debt
+    bindCurrencyOnce("amexGold", s.amexGoldCents);
+    bindCurrencyOnce("amexBlue", s.amexBlueCents);
+    bindCurrencyOnce("appleCard", s.appleCardCents);
+    bindCurrencyOnce("paypalCC", s.paypalCCCents);
+    bindCurrencyOnce("installments", s.installmentsCents);
+    bindCurrencyOnce("extraPerPaycheck", s.extraCents);
+
+    // Trips presets
+    if(!$("activeTrip").dataset.bound){
+      $("activeTrip").dataset.bound="1";
+      $("activeTrip2").dataset.bound="1";
+      $("activeTrip").value = s.activeTrip;
+      $("activeTrip2").value = s.activeTrip;
+    }
+
+    // trip fields bind as currency
+    bindCurrencyOnce("tripTarget_feb", s.tripTarget_feb);
+    bindCurrencyOnce("tripBal_feb", s.tripBal_feb);
+    bindCurrencyOnce("tripTarget_storm", s.tripTarget_storm);
+    bindCurrencyOnce("tripBal_storm", s.tripBal_storm);
+    bindCurrencyOnce("tripTarget_hunt", s.tripTarget_hunt);
+    bindCurrencyOnce("tripBal_hunt", s.tripBal_hunt);
+
+    if(!$("tripDate_feb").dataset.bound){
+      $("tripDate_feb").dataset.bound="1";
+      $("tripDate_storm").dataset.bound="1";
+      $("tripDate_hunt").dataset.bound="1";
+      $("tripDate_feb").value = s.tripDate_feb || "";
+      $("tripDate_storm").value = s.tripDate_storm || "";
+      $("tripDate_hunt").value = s.tripDate_hunt || "";
+    }
+
+    if(!$("amexApr").dataset.bound){
+      $("amexApr").dataset.bound="1";
+      $("amexApr").value = s.amexApr ?? 28.49;
+      $("debtStrategy").value = s.debtStrategy ?? "highest_first";
+    }
+  }
+
+  // ===== Render all =====
+  function renderAll(){
+    bindAll();
+    renderHome();
+    renderTripsOut();
+    renderKillOrder();
+    renderWins();
+    renderObligations();
+    renderCharts();
+  }
+
+  // Init
+  (function init(){
+    const d = JSON.parse(localStorage.getItem(LS) || "{}");
+    if(Object.keys(d).length === 0){
+      save(load());
+    }
+    renderAll();
+  })();
+</script>
+</body>
+</html>
